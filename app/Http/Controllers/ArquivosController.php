@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Arquivos;
 use Validation;
 use Storage;
+use App\Providers\Util;
 
 class ArquivosController extends Controller
 {
@@ -16,7 +17,8 @@ class ArquivosController extends Controller
      */
     public function index()
     {
-        //
+        $data['arquivos'] = Arquivos::all();
+       return view('listagem',$data);
     }
 
     /**
@@ -44,18 +46,18 @@ class ArquivosController extends Controller
         $msg = "Não foi possível enviar o arquivo";
 
         if($request->file('arquivo')->isValid()){
-
+            $util = new Util();
             $ext = $request->file('arquivo')->getClientOriginalExtension();
             $arquivo = new Arquivos();
             $arquivo->descricao = $request->descricao;
-            $arquivo->url = $request->file('arquivo')->storeAs('imagens','arquivo.'.$ext,'local');
+            $arquivo->url = $request->file('arquivo')->storeAs('imagens',$util->RandomString(5).".".$ext,'local');
             $arquivo->save();
             
             $msg = "Arquivo enviado com sucesso";
 
         }
 
-        return redirect()->back()->with('mensagem',$msg);
+        return redirect()->route('lista')->with('mensagem',$msg);
 
     }
 
@@ -78,7 +80,9 @@ class ArquivosController extends Controller
      */
     public function edit($id)
     {
-        //
+        $arquivo = Arquivos::find($id);
+        $data['arquivo'] = $arquivo;
+        return view('edit',$data);
     }
 
     /**
@@ -90,7 +94,13 @@ class ArquivosController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $msg = "Erro ao alterar o arquivo";
+        $arquivo = Arquivos::find($id);
+        $arquivo->descricao = $request->descricao;
+        if($arquivo->save()){
+            $msg = "Arquivo alterado com sucesso";
+        }
+        return redirect()->route('lista')->with('mensagem',$msg);
     }
 
     /**
@@ -101,6 +111,13 @@ class ArquivosController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $msg = "Erro ao excluir o arquivo";
+        $arq = Arquivos::find($id);
+        $url = $arq->url;
+        if(Arquivos::destroy($id)){
+            Storage::disk('local')->delete($url);
+            $msg = "Arquivo excluido com sucesso";
+        }
+        return redirect()->route('lista')->with('mensagem',$msg);
     }
 }

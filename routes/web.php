@@ -15,4 +15,9 @@ Route::get('/', function () {
     return view('home');
 });
 
-Route::resource('/arquivos',"ArquivosController",['names'=> ['store'=>'upload']]);
+Route::resource('/arquivos',"ArquivosController",[
+    'names'=> [
+        'store'=>'upload',
+        'index'=>'lista'
+    ]
+]);
